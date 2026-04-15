@@ -1,1 +1,0 @@
-# Adaptive_Sampling-Time_Series_Compression
