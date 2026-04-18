@@ -5,13 +5,15 @@ import heapq
 from scipy.fftpack import dct, idct
 import pywt
 
-URL = "https://geomag.usgs.gov/ws/algorithms/filter/?elements=H&format=json&id=BRW&type=adjusted&starttime=2025-01-10T00:00:00Z&endtime=2025-01-20T00:00:00Z&input_sampling_period=60&output_sampling_period=60"
+URL = "https://api.open-meteo.com/v1/forecast?latitude=28.67&longitude=77.22&hourly=temperature_2m"
+js = requests.get(URL).json()
+print(type(js))
+print(js.keys())
 SCALE = 100
 
 def load_data(url):
     js = requests.get(url).json()
-    values = js["values"][0]["values"]
-    values = [v if v is not None else 0 for v in values]
+    values = js["hourly"]["temperature_2m"]
     return np.array(values, dtype=np.float64)
 
 def rmse(a, b):
@@ -391,7 +393,7 @@ def main():
     
     compressed, n = adaptive_compress_simple(
         train,
-        segment_size=240
+        segment_size=60
     )
     
     H_rec = adaptive_decompress_simple(
@@ -407,7 +409,7 @@ def main():
         rmse(H, H_rec)
     ))
     compressed,n = adaptive_compress_forecast_2method(
-    train
+    train,segment_size=60
 )
 
     H_rec = adaptive_decompress_forecast_2method(
@@ -423,7 +425,7 @@ def main():
         rmse(H,H_rec)
     ))
     
-    print("\nRESULTS : Geomagnetic dataset")
+    print("\nRESULTS : Temperature / Power dataset")
     print("="*65)
     print("Method                    | Compression | RMSE")
     print("="*65)

@@ -1,17 +1,34 @@
+
+
 import requests
 import numpy as np
 from collections import Counter
 import heapq
 from scipy.fftpack import dct, idct
 import pywt
+import requests
 
-URL = "https://geomag.usgs.gov/ws/algorithms/filter/?elements=H&format=json&id=BRW&type=adjusted&starttime=2025-01-10T00:00:00Z&endtime=2025-01-20T00:00:00Z&input_sampling_period=60&output_sampling_period=60"
+URL = "https://services.swpc.noaa.gov/json/solar-cycle/observed-solar-cycle-indices.json"
+js = requests.get(URL).json()
+print(type(js))
+print(js[:2])   # print first few elements
 SCALE = 100
+
+# def load_data(url):
+#     js = requests.get(url).json()
+#     values = js["values"][0]["values"]
+#     values = [v if v is not None else 0 for v in values]
+#     return np.array(values, dtype=np.float64)
 
 def load_data(url):
     js = requests.get(url).json()
-    values = js["values"][0]["values"]
-    values = [v if v is not None else 0 for v in values]
+    
+    # Extract sunspot number (ssn)
+    values = [item["ssn"] for item in js]
+    
+    # Handle missing values (-1.0 means invalid here)
+    values = [v if v != -1.0 else 0 for v in values]
+    
     return np.array(values, dtype=np.float64)
 
 def rmse(a, b):
@@ -391,7 +408,7 @@ def main():
     
     compressed, n = adaptive_compress_simple(
         train,
-        segment_size=240
+        segment_size=180
     )
     
     H_rec = adaptive_decompress_simple(
@@ -407,7 +424,7 @@ def main():
         rmse(H, H_rec)
     ))
     compressed,n = adaptive_compress_forecast_2method(
-    train
+    train,segment_size=180
 )
 
     H_rec = adaptive_decompress_forecast_2method(
@@ -423,7 +440,7 @@ def main():
         rmse(H,H_rec)
     ))
     
-    print("\nRESULTS : Geomagnetic dataset")
+    print("\nRESULTS : Solar cycle dataset")
     print("="*65)
     print("Method                    | Compression | RMSE")
     print("="*65)
